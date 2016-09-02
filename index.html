@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>SVN viewer</title>
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <main>
+      <div class="panel-container">
+        <div class="panel-start">
+          <div class="panel-content">
+            <div id="file-explorer">
+              <input type="text" id="cwd" value="">
+              <button id="btn" type="button">[svn status]</button><br>
+              <ul id="status">
+              </ul>
+              <div id="cmd">svn commit -m</div>
+            </div>
+          </div>
+        </div>
+        <div class="panel-splitter"></div>
+        <div class="panel-end">
+          <div class="panel-content">
+            <div id="diff-panel">
+              <pre id="diff"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <script src="index.js"></script>
+  </body>
+</html>
+
