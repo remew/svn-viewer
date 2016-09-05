@@ -79,4 +79,9 @@ main {
 .panel-content {
   padding: 0.5em;
 }
+#message_textarea {
+  width: 100%;
+  resize: vertical;
+  margin: 1em 0;
+}
 

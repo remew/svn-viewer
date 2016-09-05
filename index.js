@@ -32,22 +32,36 @@ window.addEventListener('DOMContentLoaded', () => {
     const cwdInput = document.getElementById('cwd');
     cwdInput.value = localStorage.getItem('cwd');
 
+    const model = {
+        message: '',
+        checked: []
+    };
+
+    function updateCmd() {
+        document.getElementById('cmd').textContent = 'svn commit ' + model.checked.join(' ') + ' -m \'' + model.message + '\'';
+    }
+
+    const messageTextarea = document.getElementById('message_textarea');
+    messageTextarea.addEventListener('input', () => {
+        model.message = messageTextarea.value;
+        updateCmd();
+    });
     const diffOut = document.getElementById('diff');
     document.getElementById('btn').addEventListener('click', () => {
-        console.log(cwdInput.value);
         ipc.send('status-request', {cwd: cwdInput.value});
     });
     cwdInput.addEventListener('input', () => {
         localStorage.setItem('cwd', cwdInput.value);
     });
     ipc.on('status-response', (e, arg) => {
-        console.log(e);
-        console.log(arg);
         const text = arg.stdout.trim().split('\n').map(line => line.split(' ')).map(line => `<li><input type="checkbox"><a href="#${line[line.length - 1]}">${line[line.length - 1]}</a></li>`).join('');
         const statusNode = document.querySelector('#status');
         statusNode.innerHTML = text;
         [...statusNode.querySelectorAll('li input[type="checkbox"]')].forEach(el => {
-            el.addEventListener('change', updateCmd);
+            el.addEventListener('change', () => {
+                model.checked = [...statusNode.querySelectorAll('li')].filter(el => el.children[0].checked).map(el => el.children[1].textContent)
+                updateCmd();
+            });
         });
         [...statusNode.querySelectorAll('li a')].forEach(el => {
             el.addEventListener('click', e => {
@@ -57,13 +71,9 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        function updateCmd() {
-            document.getElementById('cmd').textContent = 'svn commit ' + [...statusNode.querySelectorAll('li')].filter(el => el.children[0].checked).map(el => el.children[1].textContent).join(' ') + ' -m ';
-        }
     });
     ipc.on('diff-response', (e, arg) => {
         diffOut.textContent = arg.stdout;
     });
-
 });
 
