@@ -30,10 +30,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const ipc = require('electron').ipcRenderer;
     const cwdInput = document.getElementById('cwd');
+    cwdInput.value = localStorage.getItem('cwd');
+
     const diffOut = document.getElementById('diff');
     document.getElementById('btn').addEventListener('click', () => {
         console.log(cwdInput.value);
         ipc.send('status-request', {cwd: cwdInput.value});
+    });
+    cwdInput.addEventListener('input', () => {
+        localStorage.setItem('cwd', cwdInput.value);
     });
     ipc.on('status-response', (e, arg) => {
         console.log(e);
