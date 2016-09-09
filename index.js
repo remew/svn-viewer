@@ -34,11 +34,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const model = {
         message: '',
-        checked: []
+        files: {},
     };
 
     function updateCmd() {
-        document.getElementById('cmd').textContent = 'svn commit ' + model.checked.join(' ') + ' -m \'' + model.message + '\'';
+        const cmdEl = document.getElementById('cmd');
+        const cmd = 'svn commit ' + Object.keys(model.files).filter(f => model.files[f].checked).join(' ') + ' -m \'' + model.message + '\'';
+        cmdEl.textContent = cmd;
     }
 
     const messageTextarea = document.getElementById('message_textarea');
@@ -47,19 +49,31 @@ window.addEventListener('DOMContentLoaded', () => {
         updateCmd();
     });
     const diffOut = document.getElementById('diff');
-    document.getElementById('btn').addEventListener('click', () => {
+    document.getElementById('update_status_button').addEventListener('click', () => {
         ipc.send('status-request', {cwd: cwdInput.value});
+    });
+    document.getElementById('clear_message_button').addEventListener('click', () => {
+        messageTextarea.value = '';
+        model.message = '';
+        updateCmd();
     });
     cwdInput.addEventListener('input', () => {
         localStorage.setItem('cwd', cwdInput.value);
     });
     ipc.on('status-response', (e, arg) => {
-        const text = arg.stdout.trim().split('\n').map(line => line.split(' ')).map(line => `<li><input type="checkbox"><a href="#${line[line.length - 1]}">${line[line.length - 1]}</a></li>`).join('');
+        const files = arg.stdout.trim().split('\n').map(line => line.split(' ')).map(line => line[line.length - 1]);
+        model.files = files.map(f => {
+            return {[f]: (model.files[f] ? model.files[f] : {checked: false})}
+        }).reduce((result, v) => {
+            return Object.assign(result, v);
+        }, {});
         const statusNode = document.querySelector('#status');
+        const text = Object.keys(model.files).map(f => `<li><input type="checkbox"${model.files[f].checked ? ' checked' : ''}><a href="#${f}">${f}</a></li>`).join('');
         statusNode.innerHTML = text;
         [...statusNode.querySelectorAll('li input[type="checkbox"]')].forEach(el => {
-            el.addEventListener('change', () => {
-                model.checked = [...statusNode.querySelectorAll('li')].filter(el => el.children[0].checked).map(el => el.children[1].textContent)
+            el.addEventListener('change', e => {
+                const checkbox = e.target;
+                model.files[checkbox.nextElementSibling.textContent].checked = checkbox.checked;
                 updateCmd();
             });
         });
@@ -70,7 +84,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 ipc.send('diff-request', {cwd: cwdInput.value, file: e.target.textContent});
             });
         });
-
+        updateCmd();
     });
     ipc.on('diff-response', (e, arg) => {
         diffOut.textContent = arg.stdout;
