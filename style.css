@@ -3,6 +3,10 @@
   font-family: 'SourceHanCodeJP';
   src: url('SourceHanCodeJP-Light.otf');
 }
+#status-box {
+  width: 100%;
+  overflow: auto;
+}
 #status {
   font-family: sans-serif;
   white-space: nowrap;
